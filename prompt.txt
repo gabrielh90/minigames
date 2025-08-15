@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini-Jocuri Edu</title>
+  <link rel="stylesheet" href="./assets/css/base.css">
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <div class="brand">Mini-<span>Jocuri</span> • Edu</div>
+      <div class="scoreboard">
+        <div class="pill" id="totalPoints">⭐ Puncte: 0</div>
+        <div class="pill" id="totalCandies">🍬 Bomboane: 0</div>
+        <div class="avatar-toggle" id="avatarToggle" title="Alege jucătorul">
+          <button data-avatar="boy" class="active">👦</button>
+          <button data-avatar="girl">👧</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="menu" class="panel">
+      <div class="menu-grid">
+        <div class="card">
+          <h3>Rățuște pe nuferi 🦆</h3>
+          <p>Sari pe numărul corect afișat sus.</p>
+          <button onclick="loadGame('ducks')">Joacă</button>
+        </div>
+        <div class="card">
+          <h3>Adunări & Scăderi 🍬</h3>
+          <p>Rezolvă corect și câștigă bomboane!</p>
+          <button onclick="loadGame('math')">Joacă</button>
+        </div>
+        <div class="card">
+          <h3>Balonul potrivit 🎈</h3>
+          <p>Sparge balonul cu cifra țintă.</p>
+          <button onclick="loadGame('balloons')">Joacă</button>
+        </div>
+        <div class="card">
+          <h3>Vânătoarea de comori 💎</h3>
+          <p>Găsește cutia cu numărul corect.</p>
+          <button onclick="loadGame('treasure')">Joacă</button>
+        </div>
+      </div>
+    </div>
+
+    <iframe id="gameFrame" style="width:100%;height:600px;border:none;display:none;"></iframe>
+  </main>
+
+  <footer>
+    <div class="bar">
+      <span class="muted">© 2025 Mini-Jocuri Edu</span>
+      <button class="btn secondary" onclick="showMenu()">⟵ Meniu</button>
+    </div>
+  </footer>
+
+  <script src="./assets/js/main.js"></script>
+</body>
+</html>
+:root {
+  --bg: #0f172a; --panel: #111827; --text: #f9fafb;
+  --primary: #22c55e; --accent: #60a5fa; --muted: #9ca3af;
+  --shadow: 0 10px 25px rgba(0,0,0,.35); --radius: 16px;
+}
+body {
+  margin:0; font-family: sans-serif; background: var(--bg); color: var(--text);
+  display: grid; grid-template-rows: auto 1fr auto; min-height: 100vh;
+}
+header, footer { padding: 14px 20px; }
+.bar { max-width: 1100px; margin: auto; display: flex; justify-content: space-between; align-items: center; }
+.brand span { color: var(--primary); font-weight: bold; }
+.scoreboard { display: flex; gap: 12px; align-items: center; }
+.pill { background: rgba(255,255,255,.08); padding: 8px 12px; border-radius: 999px; }
+.btn { padding: 8px 14px; border-radius: 12px; border: none; cursor: pointer; background: var(--accent); }
+.btn.secondary { background: rgba(255,255,255,.1); color: var(--text); }
+.menu-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 16px; }
+.card { background: var(--panel); padding: 16px; border-radius: var(--radius); box-shadow: var(--shadow); }
+.panel { background: var(--panel); padding: 20px; border-radius: var(--radius); }
+let points = 0;
+let candies = 0;
+let avatar = 'boy';
+
+const totalPointsEl = document.getElementById('totalPoints');
+const totalCandiesEl = document.getElementById('totalCandies');
+const frame = document.getElementById('gameFrame');
+const menu = document.getElementById('menu');
+
+function updateHeader() {
+  totalPointsEl.textContent = `⭐ Puncte: ${points}`;
+  totalCandiesEl.textContent = `🍬 Bomboane: ${candies}`;
+}
+
+function loadGame(name) {
+  menu.style.display = 'none';
+  frame.style.display = 'block';
+  frame.src = `./games/${name}/index.html?avatar=${avatar}`;
+}
+
+function showMenu() {
+  frame.style.display = 'none';
+  menu.style.display = 'block';
+  frame.src = '';
+}
+
+document.getElementById('avatarToggle').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  avatar = btn.dataset.avatar;
+  document.querySelectorAll('#avatarToggle button').forEach(b => b.classList.toggle('active', b === btn));
+});
+
+// ascultă mesaje din iframe pentru scor
+window.addEventListener('message', (e) => {
+  if (e.data?.type === 'addPoints') { points += e.data.value; updateHeader(); }
+  if (e.data?.type === 'addCandies') { candies += e.data.value; updateHeader(); }
+});
+
+updateHeader();
+
+aceasta este pegina de start pentru o suita de jocuri de copii
+1.aceasta mentine statistici legate de punctele adunate la fiecare joc 
+2.aceasta mentine statistici legate de bomboanele adunate:
+ poti sa convertesti la 100 de puncte o bomoboana 
+ unele jocuri pot da bomboane de bonusuri
+ bomboanele pot fi cumparate
+ bomboanele sunt folosite pentru costumizarea caracterului
+3.pe pagina de start este o lista cu jocuri
+ jocurile se deschid intr un iframe
+ comunica cu fiecare joc puntele si bomboanele adunate
+4.inca nu genera cod doar analizeaza l si sa mai extindem prompt ul legat de functionalitatile primei pagini
+ ca de exemplu butonul de meniu are rolul sa te duca la pagina cu  lista de jocuri 

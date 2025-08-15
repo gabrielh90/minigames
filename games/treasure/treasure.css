@@ -1,0 +1,46 @@
+:root{
+  --bg:#0f172a; --panel:#111827; --muted:#9ca3af; --text:#f9fafb;
+  --primary:#22c55e; --accent:#60a5fa; --shadow:0 10px 25px rgba(0,0,0,.35);
+  --radius:16px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:radial-gradient(1000px 600px at 50% -10%, #1e293b, var(--bg));
+  color:var(--text); font-family:ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  min-height:100vh; display:grid; grid-template-rows:auto 1fr auto;
+}
+header,footer{padding:14px 20px}
+header .bar, footer .bar{
+  max-width:1100px; margin:0 auto; display:flex; align-items:center; justify-content:space-between;
+}
+.brand{font-weight:800; letter-spacing:.3px}
+.brand span{color:var(--primary)}
+.scoreboard{display:flex; gap:12px; align-items:center}
+.pill{background:rgba(255,255,255,.08); padding:8px 12px; border-radius:999px; box-shadow:var(--shadow)}
+
+main{max-width:1100px; width:100%; margin:0 auto; padding:14px}
+.panel{
+  background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00));
+  border:1px solid rgba(255,255,255,.08); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow);
+}
+
+/* Toolbar centrată */
+.toolbar.centered{display:flex; flex-direction:column; align-items:center; gap:8px; margin-bottom:12px}
+.target{font-size:28px; font-weight:900; color:var(--accent)}
+.target strong{font-size:40px; color:var(--primary)}
+.pill-row{display:flex; gap:10px; flex-wrap:wrap; justify-content:center}
+
+/* Grid joc */
+.grid{display:grid; grid-template-columns:repeat(6, 1fr); gap:10px}
+@media (max-width:700px){ .grid{grid-template-columns:repeat(4, 1fr)} }
+@media (max-width:480px){ .grid{grid-template-columns:repeat(3, 1fr)} }
+
+.box{
+  padding:16px; border-radius:12px; background:rgba(255,255,255,.08);
+  text-align:center; font-weight:800; font-size:20px; cursor:pointer;
+  transition:transform .06s ease, outline .06s ease, background .12s ease;
+}
+.box:hover{outline:2px solid rgba(255,255,255,.2); transform:translateY(-1px)}
+.box.correct{background:rgba(34,197,94,.25)}
+.box.wrong{background:rgba(239,68,68,.25)}
+.muted{color:var(--muted)}

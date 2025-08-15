@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mini‑jocuri Educaționale</title>
+  <style>
+    :root {
+      --bg: #0f172a; /* slate-900 */
+      --panel: #111827; /* gray-900 */
+      --soft: #1f2937; /* gray-800 */
+      --muted: #9ca3af; /* gray-400 */
+      --text: #f9fafb; /* gray-50 */
+      --primary: #22c55e; /* green-500 */
+      --accent: #60a5fa; /* blue-400 */
+      --danger: #ef4444; /* red-500 */
+      --warn: #f59e0b; /* amber-500 */
+      --shadow: 0 10px 25px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: radial-gradient(1000px 600px at 50% -10%, #1e293b, var(--bg));
+      color: var(--text); font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Cantarell, Noto Sans, Ubuntu, 'Helvetica Neue', Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      min-height: 100dvh; display: grid; grid-template-rows: auto 1fr auto;
+    }
+    header, footer { padding: 14px 20px; background: transparent; }
+    header .bar, footer .bar { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+    .brand { font-weight: 800; letter-spacing: .3px; }
+    .brand span { color: var(--primary); }
+    .scoreboard { display: flex; gap: 12px; align-items: center; }
+    .pill { background: rgba(255,255,255,.08); padding: 8px 12px; border-radius: 999px; box-shadow: var(--shadow); }
+    .avatar-toggle { display: inline-flex; gap: 6px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.08); }
+    .avatar-toggle button { border: 0; background: transparent; color: var(--text); font-size: 20px; padding: 6px 10px; border-radius: 999px; cursor: pointer; }
+    .avatar-toggle button.active { background: rgba(255,255,255,.16); }
+
+    main { max-width: 1100px; width: 100%; margin: 0 auto; padding: 14px; }
+    .panel { background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00)); border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
+
+    .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+    .card { background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.00)); border: 1px solid rgba(255,255,255,.08); border-radius: var(--radius); padding: 16px; display: grid; gap: 10px; box-shadow: var(--shadow); }
+    .card h3 { margin: 0; font-size: 18px; }
+    .card p { margin: 0; color: var(--muted); font-size: 14px; }
+    .card .play { justify-self: start; padding: 10px 14px; border-radius: 12px; border: 0; background: var(--primary); color: #03150b; font-weight: 700; cursor: pointer; box-shadow: var(--shadow); transition: transform .08s ease; }
+    .card .play:hover { transform: translateY(-1px); }
+
+    .btn { padding: 10px 14px; border-radius: 12px; border: 0; background: var(--accent); color: #07121f; font-weight: 700; cursor: pointer; box-shadow: var(--shadow); }
+    .btn.secondary { background: rgba(255,255,255,.1); color: var(--text); }
+    .btn.danger { background: var(--danger); color: #1a0909; }
+
+    .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+    .toolbar .target { padding: 8px 12px; border: 1px dashed rgba(255,255,255,.25); border-radius: 10px; }
+
+    /* ——— NOU: variantă centrată a barei și ținta mărită ——— */
+    .toolbar.centered { flex-direction: column; align-items: center; gap: 8px; }
+    .toolbar .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .target { flex: 1; text-align: center; font-size: 28px; font-weight: 900; color: var(--accent); }
+    .target strong { font-size: 40px; color: var(--primary); }
+
+    .game-area { position: relative; background: linear-gradient(180deg, #0b3a6d 0%, #062e57 100%); border: 1px solid rgba(255,255,255,.08); border-radius: var(--radius); min-height: 480px; overflow: hidden; padding: 12px; }
+
+    /* Game 1: Duck & Lily Pads */
+    .pond { position: relative; width: 100%; height: 100%; background: radial-gradient(600px 400px at 50% 40%, #115e99, #08365f); border-radius: var(--radius); }
+    .lily-pad { position: absolute; width: 110px; height: 110px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #30a46c, #18794e); border: 3px solid #0e5b3a; color: #eafff5; font-weight: 900; font-size: 32px; display: grid; place-items: center; cursor: pointer; user-select: none; box-shadow: 0 8px 16px rgba(0,0,0,.35); }
+    .duck { position: absolute; font-size: 52px; transform: translate(-50%, -70%); transition: left .25s ease, top .25s ease, transform .25s ease; filter: drop-shadow(0 8px 16px rgba(0,0,0,.5)); }
+    .splash { position: absolute; pointer-events: none; width: 12px; height: 12px; border-radius: 999px; background: rgba(255,255,255,.6); opacity: .9; animation: ripple .6s ease-out forwards; }
+    @keyframes ripple { to { opacity: 0; transform: scale(6); } }
+
+    /* Game 2: Candy Math (fără borcan vizual) */
+    .math-wrap { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    .equation { font-size: 48px; font-weight: 900; letter-spacing: 2px; text-align: center; }
+    .answers { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+    .answers button { padding: 12px; border-radius: 12px; border: 0; background: rgba(255,255,255,.12); color: var(--text); font-size: 18px; cursor: pointer; }
+    .answers button:hover { outline: 2px solid rgba(255,255,255,.24); }
+
+    /* Game 3: Balloon Pop */
+    .sky { position: relative; width: 100%; height: 100%; background: linear-gradient(180deg, #6fb4f1, #5aa3e8); overflow: hidden; border-radius: var(--radius); }
+    .balloon { position: absolute; width: 88px; height: 110px; border-radius: 88px 88px 88px 88px / 110px 110px 70px 70px; background: radial-gradient(circle at 60% 30%, rgba(255,255,255,.65), rgba(255,255,255,.15)), #e879f9; box-shadow: inset 0 -12px 20px rgba(0,0,0,.15), 0 10px 20px rgba(0,0,0,.25); display: grid; place-items: center; color: #111; font-weight: 900; font-size: 36px; cursor: pointer; user-select: none; }
+    .balloon::after { content: ''; position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); width: 2px; height: 30px; background: rgba(0,0,0,.2); }
+    .pop { animation: pop .18s ease-out forwards; }
+    @keyframes pop { to { transform: scale(.2); opacity: 0; } }
+
+    /* Game 5: Treasure Hunt */
+    .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+    .box { padding: 16px; border-radius: 12px; background: rgba(255,255,255,.08); text-align: center; font-weight: 800; font-size: 20px; cursor: pointer; }
+
+    .muted { color: var(--muted); }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <div class="brand">Mini‑<span>Jocuri</span> • Edu</div>
+      <div class="scoreboard">
+        <div class="pill" id="totalPoints">⭐ Puncte: 0</div>
+        <div class="pill" id="totalCandies">🍬 Bomboane: 0</div>
+        <div class="avatar-toggle" id="avatarToggle" title="Alege jucătorul">
+          <button data-avatar="boy" class="active">👦</button>
+          <button data-avatar="girl">👧</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="screen" class="panel"></div>
+  </main>
+
+  <footer>
+    <div class="bar"><span class="muted">© 2025 Mini‑Jocuri Edu • by Gabriel & ChatGPT</span>
+      <div>
+        <button class="btn secondary" id="backToMenu" onclick="Screens.showMenu()" title="Înapoi la meniu">⟵ Meniu</button>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const App = {
+      points: 0,
+      candies: 0,
+      avatar: 'boy',
+      addPoints(n=1){ this.points += n; UI.updateHeader(); },
+      addCandies(n=1){ this.candies += n; UI.updateHeader(); },
+      resetSession(){ this.points = 0; this.candies = 0; UI.updateHeader(); }
+    };
+
+    const UI = {
+      screen: document.getElementById('screen'),
+      updateHeader(){
+        document.getElementById('totalPoints').textContent = `⭐ Puncte: ${App.points}`;
+        document.getElementById('totalCandies').textContent = `🍬 Bomboane: ${App.candies}`;
+        // avatar toggle visual
+        document.querySelectorAll('#avatarToggle button').forEach(btn => btn.classList.toggle('active', btn.dataset.avatar===App.avatar));
+      },
+      clear(){ this.screen.innerHTML = ''; }
+    };
+
+    // Navigation / Screens
+    const Screens = {
+      showMenu(){
+        stopAllGames();
+        UI.clear();
+        const wrap = document.createElement('div');
+        wrap.innerHTML = `
+          <div class="toolbar">
+            <button class="btn" id="btnQuickStart">▶ Start Rapid</button>
+            <button class="btn secondary" id="btnReset">🔄 Resetează scorul</button>
+          </div>
+          <div class="menu-grid">
+            <div class="card">
+              <h3>Rățuște pe nuferi 🦆</h3>
+              <p>Sari doar pe numărul corect afișat sus.</p>
+              <button class="play" data-game="ducks">Joacă</button>
+            </div>
+            <div class="card">
+              <h3>Adunări & Scăderi 🍬</h3>
+              <p>Răspunde corect și câștigă bomboane!</p>
+              <button class="play" data-game="math">Joacă</button>
+            </div>
+            <div class="card">
+              <h3>Balonul potrivit 🎈</h3>
+              <p>Sparge balonul cu cifra țintă.</p>
+              <button class="play" data-game="balloons">Joacă</button>
+            </div>
+            <div class="card">
+              <h3>Vânătoarea de comori 💎</h3>
+              <p>Găsește cutia cu numărul potrivit.</p>
+              <button class="play" data-game="treasure">Joacă</button>
+            </div>
+          </div>
+        `;
+        UI.screen.appendChild(wrap);
+        wrap.querySelectorAll('.play').forEach(btn => btn.addEventListener('click', (e)=> {
+          const g = e.currentTarget.dataset.game;
+          Games[g].start();
+        }));
+        wrap.querySelector('#btnReset').addEventListener('click', ()=>{ App.resetSession(); });
+        wrap.querySelector('#btnQuickStart').addEventListener('click', ()=>{ Games.ducks.start(); });
+      },
+    };
+
+    // Avatar toggle
+    document.getElementById('avatarToggle').addEventListener('click', (e)=>{
+      const btn = e.target.closest('button');
+      if(!btn) return;
+      App.avatar = btn.dataset.avatar;
+      UI.updateHeader();
+    });
+
+    // Utility
+    const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const choice = (arr) => arr[Math.floor(Math.random()*arr.length)];
+    const shuffle = (arr) => arr.sort(()=> Math.random()-0.5);
+
+    // Timer helper
+    function Timer(seconds, onTick, onEnd){
+      let remain = seconds;
+      let id = null;
+      const tick = () => { remain--; onTick?.(remain); if(remain<=0){ clearInterval(id); onEnd?.(); } };
+      onTick?.(remain);
+      id = setInterval(tick, 1000);
+      return { stop(){ clearInterval(id); } };
+    }
+
+    // Cleanup hook to stop timers/loops when leaving a game
+    const activeStops = [];
+    function registerStop(fn){ activeStops.push(fn); }
+    function stopAllGames(){ while(activeStops.length){ try{ activeStops.pop()(); }catch(_){} } }
+
+    // GAMES IMPLEMENTATION
+    const Games = {
+     // 1) Ducks & Lily Pads
+ducks: {
+  start(){
+    const self = this; // <<< referință stabilă pentru restarturi interne
+
+    // reset complet
+    stopAllGames();
+    UI.clear();
+
+    // --- UI inițial ---
+    const container = document.createElement('div');
+    const initialTarget = rand(1,10);
+    container.innerHTML = `
+      <div class="toolbar centered">
+        <div class="target">Țintă: <strong id="duckTarget">${initialTarget}</strong></div>
+        <div class="row">
+          <div class="pill" id="duckScore">✅ Corecte: 0 • 🍬 0</div>
+          <div class="pill" id="streakPill">🔥 Streak: 0 (max 0)</div>
+          <div class="pill" id="duckTime">⏳ 45</div>
+          <button class="btn secondary" id="reshuffle">🔀 Rearanjează</button>
+        </div>
+      </div>
+      <div class="game-area pond" id="pond" style="position:relative;"></div>
+    `;
+
+    // ✨ Fade-in pe noul ecran
+    container.style.opacity = '0';
+    container.style.transition = 'opacity 250ms ease';
+    UI.screen.appendChild(container);
+    requestAnimationFrame(()=> { container.style.opacity = '1'; });
+
+    // --- elemente principale ---
+    const pond = container.querySelector('#pond');
+    const duck = document.createElement('div');
+    duck.className = 'duck';
+    duck.textContent = '🦆';
+    duck.style.position = 'absolute';
+    duck.style.zIndex = '5';
+    pond.appendChild(duck);
+
+    // --- stare joc ---
+    let correct = 0;
+    let candiesEarned = 0;
+    let currentTarget = initialTarget;
+    let gameOver = false;
+
+    // streak
+    let currentStreak = 0;
+    let maxStreak = 0;
+
+    // grilă: 10 nuferi → 5x2
+    const cols = 5, rows = 2, padW = 110, padH = 110;
+    const pads = [];
+    let positions = [];
+
+    // timer curent
+    let tmr = null;
+
+    // ✨ helper: restart cu tranziție (fade-out → remove → start nou cu fade-in)
+    let restarting = false;
+    function smoothRestart(){
+      if (restarting) return;
+      restarting = true;
+      if (tmr) tmr.stop();
+
+      container.style.opacity = '1';
+      container.getBoundingClientRect(); // force reflow
+      container.style.transition = 'opacity 220ms ease';
+      container.style.opacity = '0';
+
+      setTimeout(()=>{
+        if (container.parentElement) {
+          container.parentElement.removeChild(container); // scoate UI-ul vechi
+        }
+        // mică pauză pentru update layout, apoi restart complet
+        setTimeout(()=> { self.start(); }, 30);
+      }, 220);
+    }
+
+    // --- utilitare UI ---
+    function computePositions(){
+      const gapX = (pond.clientWidth - cols*padW) / (cols+1);
+      const gapY = (pond.clientHeight - rows*padH) / (rows+1);
+      const list = [];
+      for(let r=0; r<rows; r++){
+        for(let c=0; c<cols; c++){
+          const x = Math.round(gapX + c*(padW+gapX) + padW/2);
+          const y = Math.round(gapY + r*(padH+gapY) + padH/2);
+          list.push({x, y});
+        }
+      }
+      return list;
+    }
+
+    function placeLilyPads(){
+      if (duck.parentElement && duck.parentElement.classList.contains('lily-pad')) {
+        pond.appendChild(duck);
+      }
+      pond.querySelectorAll('.lily-pad').forEach(el=>el.remove());
+      pads.length = 0;
+
+      positions = computePositions();
+
+      // numere 1..10 fără repetiții
+      const numbers = Array.from({length:10}, (_,i)=> i+1);
+
+      numbers.forEach((n, i)=>{
+        const pos = positions[i];
+        const pad = document.createElement('div');
+        pad.className = 'lily-pad';
+        pad.dataset.number = String(n);
+        pad.textContent = n;
+        pad.style.position = 'absolute';
+        pad.style.left = (pos.x - padW/2) + 'px';
+        pad.style.top  = (pos.y - padH/2) + 'px';
+        pad.style.width = padW + 'px';
+        pad.style.height = padH + 'px';
+        pad.style.display = 'flex';
+        pad.style.alignItems = 'center';
+        pad.style.justifyContent = 'center';
+
+        pad.addEventListener('click', ()=>{
+          if (gameOver) return;
+
+          const rect = pad.getBoundingClientRect();
+          const pondRect = pond.getBoundingClientRect();
+          const cx = rect.left - pondRect.left + rect.width/2;
+          const cy = rect.top - pondRect.top + rect.height/2;
+
+          pad.appendChild(duck);
+          duck.style.left = '50%';
+          duck.style.top  = '50%';
+          duck.style.transform = 'translate(-50%, -55%)';
+
+          splash(cx, cy);
+
+          const chosen = Number(pad.dataset.number);
+          if(chosen === currentTarget){
+            correct++;
+            candiesEarned++;
+            currentStreak++;
+            if (currentStreak > maxStreak) maxStreak = currentStreak;
+
+            App.addPoints(1);
+            App.addCandies(1);
+
+            popCandy(cx, cy);
+            update();
+            newTarget();
+            shufflePadPositions(); // rearanjează pozițiile după răspuns corect
+          } else {
+            endGame('Ai pierdut!');
+          }
+        });
+
+        pond.appendChild(pad);
+        pads.push(pad);
+      });
+
+      pond.appendChild(duck);
+      duck.style.left = (pond.clientWidth/2) + 'px';
+      duck.style.top  = (pond.clientHeight/2) + 'px';
+      duck.style.transform = 'translate(-50%, -50%)';
+    }
+
+    function shufflePadPositions(){
+      const shuffled = positions.slice();
+      for(let i=shuffled.length-1; i>0; i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      pads.forEach((pad, i)=>{
+        const pos = shuffled[i];
+        pad.style.left = (pos.x - padW/2) + 'px';
+        pad.style.top  = (pos.y - padH/2) + 'px';
+      });
+    }
+
+    function splash(x,y){
+      const s = document.createElement('div');
+      s.className = 'splash';
+      s.style.position = 'absolute';
+      s.style.left = (x-6)+'px';
+      s.style.top  = (y-6)+'px';
+      pond.appendChild(s);
+      setTimeout(()=> s.remove(), 600);
+    }
+
+    // 🍬 Animație bomboană
+    function popCandy(x, y){
+      const c = document.createElement('div');
+      c.textContent = '🍬';
+      c.style.position = 'absolute';
+      c.style.left = (x - 12) + 'px';
+      c.style.top  = (y - 12) + 'px';
+      c.style.fontSize = '22px';
+      c.style.pointerEvents = 'none';
+      c.style.transition = 'transform 700ms ease-out, opacity 700ms ease-out';
+      c.style.transform = 'translate(-50%, -10px) scale(1)';
+      c.style.opacity = '1';
+      pond.appendChild(c);
+      requestAnimationFrame(()=>{
+        c.style.transform = 'translate(-50%, -70px) scale(1.15)';
+        c.style.opacity = '0';
+      });
+      setTimeout(()=> c.remove(), 750);
+    }
+
+    function newTarget(){
+      let t;
+      do { t = rand(1,10); } while(t===currentTarget);
+      currentTarget = t;
+      container.querySelector('#duckTarget').textContent = t;
+    }
+
+    function update(){
+      container.querySelector('#duckScore').textContent = `✅ Corecte: ${correct} • 🍬 ${candiesEarned}`;
+      container.querySelector('#streakPill').textContent = `🔥 Streak: ${currentStreak} (max ${maxStreak})`;
+    }
+
+    // finalizare joc cu overlay + shake
+    function endGame(title){
+      if (gameOver) return;
+      gameOver = true;
+
+      if (tmr) tmr.stop();
+      pads.forEach(p=> p.style.pointerEvents = 'none');
+
+      const overlay = document.createElement('div');
+      overlay.style.position = 'absolute';
+      overlay.style.left = '50%';
+      overlay.style.top = '50%';
+      overlay.style.transform = 'translate(-50%, -50%)';
+      overlay.style.padding = '24px 28px';
+      overlay.style.borderRadius = '16px';
+      overlay.style.background = 'rgba(0,0,0,0.85)';
+      overlay.style.color = '#fff';
+      overlay.style.fontSize = '24px';
+      overlay.style.fontWeight = '700';
+      overlay.style.textAlign = 'center';
+      overlay.style.zIndex = '999';
+      overlay.style.minWidth = '320px';
+      overlay.style.animation = 'shakeAnim 0.5s ease'; // 🔥 shake
+
+      overlay.innerHTML = `
+        <div style="font-size:28px; margin-bottom:8px;">${title}</div>
+        <div style="margin-bottom:6px;">✅ Corecte: <strong>${correct}</strong></div>
+        <div style="margin-bottom:6px;">🍬 Bomboane: <strong>${candiesEarned}</strong></div>
+        <div style="margin-bottom:16px;">🔥 Streak max: <strong>${maxStreak}</strong></div>
+        <div style="display:flex; gap:10px; justify-content:center;">
+          <button id="retryBtn" class="btn primary">↻ Reîncearcă</button>
+          <button id="menuBtn"  class="btn secondary">🏠 Meniu</button>
+        </div>
+      `;
+      pond.appendChild(overlay);
+
+      // Reîncearcă cu fade-out & reset total
+      overlay.querySelector('#retryBtn').addEventListener('click', smoothRestart);
+      overlay.querySelector('#menuBtn').addEventListener('click', ()=> { Screens.showMenu(); });
+    }
+
+    // --- inițializare grilă + evenimente ---
+    placeLilyPads();
+
+    container.querySelector('#reshuffle').addEventListener('click', ()=>{
+      if (!gameOver) shufflePadPositions();
+    });
+
+    // TIMER NOU (se va opri la endGame; la Reîncearcă se creează altul)
+    tmr = Timer(
+      45,
+      (r)=> container.querySelector('#duckTime').textContent = `⏳ ${r}`,
+      ()=> endGame('Timpul a expirat!')
+    );
+    registerStop(()=> tmr && tmr.stop());
+
+    const ro = new ResizeObserver(()=>{
+      positions = computePositions();
+      shufflePadPositions();
+    });
+    ro.observe(pond);
+    registerStop(()=> ro.disconnect());
+
+    // 🔥 CSS pentru shake — o singură dată
+    if (!document.getElementById('shakeAnimStyle')) {
+      const style = document.createElement('style');
+      style.id = 'shakeAnimStyle';
+      style.textContent = `
+        @keyframes shakeAnim {
+          0% { transform: translate(-50%, -50%) rotate(0deg); }
+          20% { transform: translate(calc(-50% - 5px), -50%) rotate(-2deg); }
+          40% { transform: translate(calc(-50% + 5px), -50%) rotate(2deg); }
+          60% { transform: translate(calc(-50% - 5px), -50%) rotate(-2deg); }
+          80% { transform: translate(calc(-50% + 5px), -50%) rotate(2deg); }
+          100% { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }
+},
+
+
+
+
+      // 2) Candy Math (fără borcan vizual)
+      math: {
+        start(){
+          stopAllGames(); UI.clear();
+          const wrap = document.createElement('div');
+          wrap.innerHTML = `
+            <div class="toolbar">
+              <div class="pill" id="mathProgress">Întrebări: 0/10</div>
+              <div class="pill" id="mathTime">⏳ 60</div>
+              <div class="pill" id="mathStreak">⚡ Streak: 0</div>
+            </div>
+            <div class="math-wrap">
+              <div>
+                <div class="equation" id="equation">1 + 1 = ?</div>
+                <div class="answers" id="answers"></div>
+              </div>
+            </div>
+          `;
+          UI.screen.appendChild(wrap);
+
+          let total = 0, correct = 0, streak = 0;
+          let currentAns = null;
+
+          function newQuestion(){
+            total++; if(total>10){ end(); return; }
+            const op = Math.random()<.5 ? '+' : '-';
+            let a = rand(1,10), b = rand(1,10);
+            if(op==='-'){ if(a<b) [a,b] = [b,a]; } // avoid negative
+            let result = op==='+' ? a+b : a-b;
+            // keep results between 0..10
+            if(result<0 || result>10){ return newQuestion(); }
+            document.getElementById('equation').textContent = `${a} ${op} ${b} = ?`;
+            currentAns = result;
+            const answers = document.getElementById('answers');
+            answers.innerHTML = '';
+            const options = new Set([result]);
+            while(options.size<6){ options.add(rand(0,10)); }
+            shuffle([...options]).forEach(v=>{
+              const btn = document.createElement('button');
+              btn.textContent = v; btn.addEventListener('click', ()=> pick(v));
+              answers.appendChild(btn);
+            });
+            update();
+          }
+
+          function pick(v){
+            if(v===currentAns){
+              correct++; streak++; App.addCandies(1);
+              // Borcanul vizual a fost eliminat, păstrăm doar recompensa la scorul global.
+            } else {
+              streak = 0;
+            }
+            newQuestion();
+          }
+
+          function update(){
+            document.getElementById('mathProgress').textContent = `Întrebări: ${Math.min(total,10)}/10`;
+            document.getElementById('mathStreak').textContent = `⚡ Streak: ${streak}`;
+          }
+
+          function end(){
+            alert(`Bravo! Ai răspuns corect la ${correct} din 10. Ai primit ${correct} bomboane.`);
+            Screens.showMenu();
+          }
+
+          const tmr = Timer(60, (r)=> document.getElementById('mathTime').textContent = `⏳ ${r}`, ()=> end());
+          registerStop(()=> tmr.stop());
+
+          newQuestion();
+        }
+      },
+
+      // 3) Balloon Pop
+      balloons: {
+        start(){
+          stopAllGames(); UI.clear();
+          const wrap = document.createElement('div');
+          const target = rand(0,9);
+          wrap.innerHTML = `
+            <div class="toolbar centered">
+              <div class="target">Țintă: <strong id="balloonTarget">${target}</strong></div>
+              <div class="row">
+                <div class="pill" id="balloonScore">🎯 Scor: 0</div>
+                <div class="pill" id="balloonTime">⏳ 45</div>
+              </div>
+            </div>
+            <div class="game-area sky" id="sky"></div>
+          `;
+          UI.screen.appendChild(wrap);
+
+          const sky = document.getElementById('sky');
+          let score = 0, currentTarget = target;
+
+          function spawnBalloon(){
+            const b = document.createElement('div');
+            b.className = 'balloon';
+            const val = rand(0,9); b.textContent = val;
+            const x = rand(10, Math.max(10, sky.clientWidth-98));
+            b.style.left = x + 'px';
+            b.style.bottom = '-80px';
+            sky.appendChild(b);
+            const speed = rand(80, 120); // pixels per second
+            let y = -80; let alive = true;
+            const step = () => {
+              y += speed/60; b.style.bottom = y + 'px';
+              if(y > sky.clientHeight + 120){ alive = false; b.remove(); return; }
+              if(alive) requestAnimationFrame(step);
+            };
+            b.addEventListener('click', ()=>{
+              if(val===currentTarget){ score++; App.addPoints(1); App.addCandies(1); wrap.querySelector('#balloonScore').textContent = `🎯 Scor: ${score}`; }
+              b.classList.add('pop'); setTimeout(()=> b.remove(), 180);
+            });
+            requestAnimationFrame(step);
+          }
+
+          const maker = setInterval(()=> spawnBalloon(), 700);
+          registerStop(()=> clearInterval(maker));
+
+          function newTarget(){ let t; do{ t = rand(0,9);} while(t===currentTarget); currentTarget = t; wrap.querySelector('#balloonTarget').textContent = t; }
+
+          const tmr = Timer(45, (r)=> wrap.querySelector('#balloonTime').textContent = `⏳ ${r}`, ()=>{
+            alert(`Gata! Scor: ${score}.`);
+            Screens.showMenu();
+          });
+          registerStop(()=> tmr.stop());
+
+          // Change target every 10 sec for varietate
+          const rot = setInterval(newTarget, 10000);
+          registerStop(()=> clearInterval(rot));
+        }
+      },
+
+      // 5) Treasure Hunt
+      treasure: {
+        start(){
+          stopAllGames(); UI.clear();
+          const wrap = document.createElement('div');
+          const target = rand(0,20);
+          wrap.innerHTML = `
+            <div class="toolbar centered">
+              <div class="target">Găsește numărul: <strong id="trg">${target}</strong></div>
+              <div class="row">
+                <div class="pill" id="tsScore">Scor: 0</div>
+                <div class="pill" id="tsRound">Runda: 1/10</div>
+              </div>
+            </div>
+            <div class="grid" id="grid"></div>
+          `;
+          UI.screen.appendChild(wrap);
+
+          const grid = document.getElementById('grid');
+          let currentTarget = target; let score=0; let round=1;
+
+          function makeRound(){
+            grid.innerHTML = '';
+            const pool = new Set([currentTarget]);
+            while(pool.size<12){ pool.add(rand(0,20)); }
+            const cells = shuffle([...pool]);
+            cells.forEach(v=>{
+              const box = document.createElement('div');
+              box.className = 'box'; box.textContent = v;
+              box.addEventListener('click', ()=>{
+                if(v===currentTarget){
+                  box.textContent = '💎'; score++; App.addPoints(1); App.addCandies(1);
+                  setTimeout(()=> next(), 350);
+                } else {
+                  box.textContent = '❌';
+                }
+                update();
+              });
+              grid.appendChild(box);
+            });
+          }
+
+          function update(){
+            wrap.querySelector('#tsScore').textContent = `Scor: ${score}`;
+            wrap.querySelector('#tsRound').textContent = `Runda: ${round}/10`;
+            wrap.querySelector('#trg').textContent = currentTarget;
+          }
+
+          function next(){
+            if(round>=10){
+              alert(`Super! Ai găsit ${score} comori din 10 runde.`);
+              Screens.showMenu(); return;
+            }
+            round++; let t; do{ t = rand(0,20);} while(t===currentTarget); currentTarget = t; makeRound(); update();
+          }
+
+          makeRound(); update();
+        }
+      },
+    };
+
+    // INIT
+    Screens.showMenu();
+    UI.updateHeader();
+  </script>
+</body>
+</html>

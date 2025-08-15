@@ -1,0 +1,88 @@
+:root {
+  --bg: #0f172a; --panel: #111827; --soft: #1f2937;
+  --muted: #9ca3af; --text: #f9fafb; --primary: #22c55e;
+  --accent: #60a5fa; --shadow: 0 10px 25px rgba(0,0,0,.35);
+  --radius: 16px;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(1000px 600px at 50% -10%, #1e293b, var(--bg));
+  color: var(--text);
+  font-family: system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+header, footer { padding: 14px 20px; }
+header .bar, footer .bar {
+  max-width: 1100px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.brand { font-weight: 800; }
+.brand span { color: var(--primary); }
+.pill {
+  background: rgba(255,255,255,.08);
+  padding: 8px 12px;
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+}
+.panel {
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  margin: 20px auto;
+  max-width: 1100px;
+}
+
+/* toolbar */
+.toolbar.centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.target { font-size: 28px; font-weight: 900; color: var(--accent); }
+.target strong { font-size: 40px; color: var(--primary); }
+.pill-row { display: flex; gap: 10px; }
+
+/* aria joc */
+.game-area {
+  position: relative;
+  background: linear-gradient(180deg, #0b3a6d, #062e57);
+  border-radius: var(--radius);
+  min-height: 480px;
+  overflow: hidden;
+}
+
+/* nuferi + rata */
+.lily-pad {
+  position: absolute;
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #30a46c, #18794e);
+  border: 3px solid #0e5b3a;
+  color: #eafff5;
+  font-weight: 900; font-size: 32px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(0,0,0,.35);
+}
+
+.duck {
+  position: absolute;
+  font-size: 52px;
+  transform: translate(-50%, -70%);
+  transition: left .25s ease, top .25s ease, transform .25s ease;
+}
+
+.splash {
+  position: absolute;
+  pointer-events: none;
+  width: 12px; height: 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.6);
+  animation: ripple .6s ease-out forwards;
+}
+@keyframes ripple { to { opacity: 0; transform: scale(6); } }
