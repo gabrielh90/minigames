@@ -56,7 +56,8 @@
   btnConvert && btnConvert.addEventListener('click', ()=>{
     const rate = window.CONFIG.CONVERSION.POINTS_PER_CANDY; const st = window.State.get();
     const max = Math.floor(st.points / rate); if(max <= 0){ window.UI.showToast('Nu ai suficiente puncte pentru conversie.'); return; }
-    const want = prompt(`Ai ${st.points} puncte. Rată: ${rate}p = 1 bomboană.\nCâte bomboane vrei să convertești? (max ${max})`);
+    const want = prompt(`Ai ${st.points} puncte. Rată: ${rate}p = 1 bomboană.
+Câte bomboane vrei să convertești? (max ${max})`);
     const n = Math.floor(Number(want)); if(!Number.isFinite(n) || n <= 0) return;
     const res = window.State.convertPointsToCandies(n);
     if(res.ok){ window.UI.showToast(`↔️ Conversie reușită: -${res.spent}p → +${res.converted}🍬`); updateUIFromState(); }
@@ -65,6 +66,10 @@
 
   // Init
   updateUIFromState();
+  // setează emoji corect pe butonul Avatar la start (dacă modulul Avatar e încărcat)
+  try { if (window.State && document.getElementById('btnAvatar')) {
+    const a = window.State.get().avatar; document.getElementById('btnAvatar').textContent = `${a === 'girl' ? '👧' : '👦'} Avatar`;
+  } } catch {}
   window.UI.toggleViews('menu');
   window.UI.showBreadcrumb(null);
 })();
