@@ -7,22 +7,34 @@
 
 * { box-sizing: border-box; }
 
+/* umple 100% din iframe, fără scroll */
+html, body { height: 100%; }
 body {
   margin: 0;
+  overflow: hidden;                 /* <- elimină scrollbar-ul */
   background: radial-gradient(1000px 600px at 50% -10%, #1e293b, var(--bg));
   color: var(--text);
   font-family: system-ui, sans-serif;
-  min-height: 100vh;
+  display: grid;
+  grid-template-rows: 1fr;          /* doar main */
+}
+main, #screen { width: 100%; height: 100%; }
+
+/* panel fără margini care să creeze scroll */
+.panel {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
 }
 
-header, footer { padding: 14px 20px; }
-header .bar, footer .bar {
-  max-width: 1100px; margin: 0 auto;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.brand { font-weight: 800; }
-.brand span { color: var(--primary); }
-
+/* toolbar sus (în interiorul jocului) */
+.toolbar.centered { display:flex; flex-direction:column; align-items:center; gap:8px; padding-top:10px; }
+.target { font-size: 28px; font-weight: 900; color: var(--accent); }
+.target strong { font-size: 40px; color: var(--primary); }
+.pill-row { display:flex; gap:10px; }
 .pill {
   background: rgba(255,255,255,.08);
   padding: 8px 12px;
@@ -30,34 +42,16 @@ header .bar, footer .bar {
   box-shadow: var(--shadow);
 }
 
-.panel {
-  background: rgba(255,255,255,.02);
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: var(--radius);
-  padding: 18px;
-  box-shadow: var(--shadow);
-  margin: 20px auto;
-  max-width: 1100px;
-}
-
-/* toolbar */
-.toolbar.centered {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-.target { font-size: 28px; font-weight: 900; color: var(--accent); }
-.target strong { font-size: 40px; color: var(--primary); }
-.pill-row { display: flex; gap: 10px; }
-
-/* aria joc */
+/* aria joc: EXACT cât iframe-ul */
 .game-area {
   position: relative;
+  width: 100%;
+  height: calc(100vh - 96px); /* loc pentru toolbar (~96px). dacă vrei full: 100vh */
+  min-height: 0;
   background: linear-gradient(180deg, #0b3a6d, #062e57);
   border-radius: var(--radius);
-  min-height: 520px;
   overflow: hidden;
+  margin: 10px auto;
 }
 
 /* nuferi */
@@ -78,7 +72,7 @@ header .bar, footer .bar {
 .lily-pad:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 24px rgba(0,0,0,.4); }
 .lily-pad:active { transform: translateY(0) scale(0.98); }
 
-/* rata */
+/* rața */
 .duck {
   position: absolute;
   font-size: 52px;
@@ -105,17 +99,14 @@ header .bar, footer .bar {
 }
 @keyframes ripple { to { opacity: 0; transform: scale(6); } }
 
-/* cadere in gol */
-.lily-pad.fall,
-.duck.fall {
-  animation: fall-away .8s ease forwards;
-}
+/* cădere */
+.lily-pad.fall, .duck.fall { animation: fall-away .8s ease forwards; }
 @keyframes fall-away {
   0% { transform: translateY(0) rotate(0deg); opacity: 1; }
   100% { transform: translateY(600px) rotate(25deg); opacity: 0; }
 }
 
-/* overlay pierdere */
+/* overlay final */
 .overlay {
   position: absolute;
   inset: 0;
@@ -134,22 +125,10 @@ header .bar, footer .bar {
   max-width: 420px;
   text-align: center;
 }
-.modal-title {
-  font-size: 28px;
-  font-weight: 900;
-  margin-bottom: 10px;
-}
-.modal-body {
-  color: var(--muted);
-  display: grid;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-.modal-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-}
+.modal-title { font-size: 28px; font-weight: 900; margin-bottom: 10px; }
+.modal-title.success { color: var(--primary); }
+.modal-body { color: var(--muted); display: grid; gap: 6px; margin-bottom: 16px; }
+.modal-actions { display: flex; gap: 10px; justify-content: center; }
 .btn {
   padding: 10px 14px;
   border-radius: 999px;
@@ -164,10 +143,3 @@ header .bar, footer .bar {
 .btn:active { transform: translateY(0); }
 .btn.primary { background: linear-gradient(180deg, #22c55e, #16a34a); border-color: #0f7a3a; }
 .btn.ghost { background: rgba(255,255,255,.04); }
-
-/* utilitare */
-.muted { color: var(--muted); }
-
-/* ... restul fișierului tău ... */
-
-.modal-title.success { color: var(--primary); }
