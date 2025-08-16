@@ -6,6 +6,7 @@
   <title>Mini‑Jocuri Edu</title>
   <link rel="stylesheet" href="./assets/css/base.css" />
   <link rel="stylesheet" href="./assets/css/home.css" />
+  <link rel="stylesheet" href="./assets/avatar/avatar.css" />
 </head>
 <body>
   <header>
@@ -14,10 +15,7 @@
       <div class="scoreboard">
         <div class="pill" id="totalPoints" aria-live="polite">⭐ Puncte: 0</div>
         <div class="pill" id="totalCandies" aria-live="polite">🍬 Bomboane: 0</div>
-        <div class="avatar-toggle" id="avatarToggle" title="Alege jucătorul">
-          <button data-avatar="boy" class="active" aria-pressed="true">👦</button>
-          <button data-avatar="girl" aria-pressed="false">👧</button>
-        </div>
+        <button class="btn secondary" id="btnAvatar">🧒 Avatar</button>
       </div>
     </div>
     <div class="bar sub">
@@ -57,6 +55,19 @@
       </div>
     </div>
 
+    <!-- Panouri Avatar: Magazin & Dulap -->
+    <div id="shop" class="panel" style="display:none;">
+      <h2>🛍️ Magazin</h2>
+      <p class="muted">Cumpără haine folosind 🍬 bomboane.</p>
+      <div id="shopGrid" class="menu-grid"></div>
+    </div>
+
+    <div id="closet" class="panel" style="display:none;">
+      <h2>👗 Dulap</h2>
+      <p class="muted">Item-uri deținute. Echiparea se aplică instant în jocuri.</p>
+      <div id="closetGrid" class="menu-grid"></div>
+    </div>
+
     <iframe id="gameFrame" title="Zonă joc" style="width:100%;height:600px;border:none;display:none;"></iframe>
   </main>
 
@@ -67,15 +78,42 @@
     </div>
   </footer>
 
+  <!-- Modal Avatar -->
+  <div id="avatarModal" class="modal-root" hidden>
+    <div class="modal-card">
+      <div class="modal-title">Avatarul meu</div>
+      <div class="gender-toggle" id="genderToggle" role="tablist" aria-label="Alege genul">
+        <button data-avatar="boy" role="tab" aria-selected="true">👦 Băiat</button>
+        <button data-avatar="girl" role="tab" aria-selected="false">👧 Fată</button>
+      </div>
+      <div class="modal-body">
+        <div id="avatarPreview" class="avatar-preview" aria-label="Previzualizare avatar">👦</div>
+        <div class="avatar-actions">
+          <button class="btn" id="btnOpenShop">🛍️ Magazin</button>
+          <button class="btn secondary" id="btnOpenCloset">👗 Dulap</button>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn secondary" id="btnCloseAvatar">Închide</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toasts -->
   <div id="toasts" class="toasts" aria-live="polite" aria-atomic="true"></div>
 
-  <!-- Scripturi: fără plugin‑uri, în ordine pentru dependențe -->
+  <!-- Scripturi -->
   <script src="./assets/js/config.js"></script>
   <script src="./assets/js/state.js"></script>
   <script src="./assets/js/ui.js"></script>
   <script src="./assets/js/daily.js"></script>
   <script src="./assets/js/bus.js"></script>
+  <!-- Avatar modul -->
+  <script src="./assets/avatar/config.js"></script>
+  <script src="./assets/avatar/store.js"></script>
+  <script src="./assets/avatar/ui.js"></script>
+  <script src="./assets/avatar/modal.js"></script>
+  <!-- Main app -->
   <script src="./assets/js/main.js"></script>
 </body>
 </html>

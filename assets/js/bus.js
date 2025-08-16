@@ -2,7 +2,6 @@
 (function(){
   const originAllowed = window.location.origin;
   const RATE_WINDOW_MS = 5000;
-
   const rate = new Map(); // key: sourceGame, value: {start, count}
   const frame = document.getElementById('gameFrame');
 
@@ -18,7 +17,6 @@
   function clampPosInt(n){ n = Math.floor(Number(n)); return Number.isFinite(n) && n > 0 ? n : 0; }
 
   function handleMessage(e){
-    // Acceptăm doar mesaje de la iframe-ul nostru și din aceeași origine
     if(e.source !== frame.contentWindow) return;
     if(e.origin !== originAllowed) return;
 
@@ -33,54 +31,24 @@
       case 'addPoints': {
         const cap = window.CONFIG?.LIMITS?.POINTS_PER_MESSAGE ?? 100;
         const v = Math.min(clampPosInt(payload.value), cap);
-        if(v){
-          const st = window.State.addPoints(v);
-          window.UI.updateHeader(st);
-          window.UI.showToast(`+${v} puncte din „${window.CONFIG.GAMES[sourceGame]||sourceGame}”`);
-        }
+        if(v){ const st = window.State.addPoints(v); window.UI.updateHeader(st); window.UI.showToast(`+${v} puncte din „${window.CONFIG.GAMES[sourceGame]||sourceGame}”`); }
         break;
       }
       case 'addCandies': {
         const cap = window.CONFIG?.LIMITS?.CANDIES_PER_MESSAGE ?? 3;
         const v = Math.min(clampPosInt(payload.value), cap);
-        if(v){
-          const st = window.State.addCandies(v);
-          window.UI.updateHeader(st);
-          window.UI.showToast(`+${v} bomboană(e) din „${window.CONFIG.GAMES[sourceGame]||sourceGame}”`);
-        }
+        if(v){ const st = window.State.addCandies(v); window.UI.updateHeader(st); window.UI.showToast(`+${v} bomboană(e) din „${window.CONFIG.GAMES[sourceGame]||sourceGame}”`); }
         break;
       }
-      case 'requestPlayerState': {
-        sendToGame('playerState', window.State.getPublic());
-        break;
-      }
-      case 'gameOver': {
-        // Doar un toast informativ
-        const score = clampPosInt(payload.score);
-        if(score){ window.UI.showToast(`Scorul tău: ${score}`); }
-        break;
-      }
-      case 'achievementUnlocked': {
-        const id = String(payload.id||'');
-        if(id){ window.State.unlockBadge(id); window.UI.showToast(`🏅 Realizare: ${id}`); }
-        break;
-      }
-      case 'exitToMenu': {
-        // afișează lista jocurilor
-        if (typeof window.showMenu === 'function') window.showMenu();
-        else if (window.UI) { UI.toggleViews('menu'); UI.showBreadcrumb(null); }
-        break;
-      }
-      default: {
-        // ignoră necunoscute
-      }
+      case 'requestPlayerState': { sendToGame('playerState', window.State.getPublic()); break; }
+      case 'gameOver': { const score = clampPosInt(payload.score); if(score){ window.UI.showToast(`Scorul tău: ${score}`); } break; }
+      case 'achievementUnlocked': { const id = String(payload.id||''); if(id){ window.State.unlockBadge(id); window.UI.showToast(`🏅 Realizare: ${id}`); } break; }
+      case 'exitToMenu': { if(window.UI){ UI.toggleViews('menu'); UI.showBreadcrumb(null); } if(frame) frame.src = ''; break; }
+      default: { /* ignoră necunoscute */ }
     }
   }
 
-  function sendToGame(type, payload){
-    if(!frame.contentWindow) return;
-    frame.contentWindow.postMessage({ type, payload }, originAllowed);
-  }
+  function sendToGame(type, payload){ if(!frame.contentWindow) return; frame.contentWindow.postMessage({ type, payload }, originAllowed); }
 
   window.addEventListener('message', handleMessage);
   window.Bus = { sendToGame };

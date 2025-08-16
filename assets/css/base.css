@@ -16,12 +16,10 @@ body {
   background: var(--bg); color: var(--text);
   display: grid; grid-template-rows: auto auto 1fr auto; min-height: 100vh;
 }
-
-header { padding: 14px 20px; }
-footer { padding: 6px 20px; } 
+header { padding: 14px 20px 0 20px; }
+footer { padding: 6px 20px; }
 .bar { max-width: 1100px; margin: auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.bar.sub { padding-top: 6px; }
-
+.bar.sub { padding: 10px 20px 14px 20px; }
 .brand { font-weight: 600; letter-spacing:.2px; }
 .brand span { color: var(--primary); font-weight: 800; }
 .scoreboard { display: flex; gap: 12px; align-items: center; }
@@ -34,10 +32,6 @@ footer { padding: 6px 20px; }
 .card > .btn { margin-top: auto; }
 .panel { background: var(--panel); padding: 20px; border-radius: var(--radius); max-width: 1100px; margin: 10px auto; box-shadow: var(--shadow); }
 .muted { color: var(--muted); }
-
-.avatar-toggle { display: inline-flex; gap: 6px; background: rgba(255,255,255,.06); padding: 4px; border-radius: 12px; }
-.avatar-toggle button { background: transparent; border: none; font-size: 18px; padding: 6px 10px; border-radius: 10px; cursor: pointer; color: var(--text); }
-.avatar-toggle button.active { background: rgba(96,165,250,.25); outline: 2px solid rgba(96,165,250,.6); }
 
 /* Breadcrumb */
 .breadcrumb { color: var(--muted); font-size: 14px; }
@@ -52,3 +46,11 @@ footer { padding: 6px 20px; }
 /* Bump animation for score */
 .bump { animation: bump .25s ease-in-out; }
 @keyframes bump { 0%{ transform: scale(1); } 50%{ transform: scale(1.08); } 100%{ transform: scale(1); } }
+
+/* Modal-specific (selector gen) */
+.gender-toggle{
+  display:flex; gap:8px; background: rgba(255,255,255,.06);
+  padding:4px; border-radius:12px; margin-bottom:8px; width:max-content;
+}
+.gender-toggle button{ background:transparent; border:none; color:var(--text); padding:8px 10px; border-radius:10px; cursor:pointer; font-weight:700; display:flex; align-items:center; gap:6px; }
+.gender-toggle button.active{ background: rgba(96,165,250,.25); outline: 2px solid rgba(96,165,250,.6); }

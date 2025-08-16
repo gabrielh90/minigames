@@ -1,0 +1,55 @@
+Când creezi un joc copil (rulat într-un iframe), respectă acest contract de comunicare cu aplicația părinte:
+
+1) Trimite mesaje către părinte astfel:
+   function send(type, payload) {
+     parent.postMessage({ type, payload, sourceGame }, location.origin);
+   }
+   - `type` este unul din: "addPoints", "addCandies", "requestPlayerState", "gameOver", "exitToMenu" (vezi mai jos).
+   - `payload` este un obiect (poate lipsi).
+   - `sourceGame` e un string scurt cu id-ul jocului, ex: "ducks".
+
+2) Actualizarea scorului global:
+   - Adaugă puncte:
+       send('addPoints', { value: <număr întreg pozitiv>, reason: '...' });
+   - Adaugă bomboane:
+       send('addCandies', { value: <număr întreg pozitiv>, reason: '...' });
+   Notă: Părintele limitează automat valorile per mesaj (cap configurabil).
+
+3) Citește starea jucătorului (avatar, puncte, bomboane, badge-uri):
+   - Cere starea:
+       send('requestPlayerState');
+   - Ascultă răspunsul:
+       window.addEventListener('message', (e) => {
+         if (e.origin !== location.origin) return;
+         const { type, payload } = e.data || {};
+         if (type === 'playerState') {
+           // payload: { points, candies, avatar, equipped, badges }
+           // ...actualizează UI intern dacă e nevoie
+         }
+         if (type === 'avatarChanged') {
+           // payload: { avatar, equipped }
+           // ...reactualizează sprite/skin dacă e nevoie
+         }
+       });
+
+4) Sfârșit de rundă (opțional):
+   - Trimite scorul/rundă încheiată:
+       send('gameOver', { score: <int>, canSafelyExit: true });
+
+5) Întoarcere la meniul de jocuri (din joc):
+   Varianta A (recomandată): trimite un mesaj și părintele iese la meniu:
+       send('exitToMenu');
+   Varianta B (alternativă, dacă părintele expune App API):
+       dacă fereastra părinte expune `window.App.showMenu()`, îl poți apela indirect:
+       // DOAR dacă există și e sigur:
+       // parent.App?.showMenu();
+
+6) Securitate:
+   - Folosește mereu `location.origin` în `postMessage`.
+   - Procesează doar mesaje de la același `origin`.
+
+7) Parametri query:
+   - Jocul primește în URL param `avatar` și `game`. Exemplu:
+     /games/<id>/index.html?avatar=boy&game=ducks
+
+8) Fără biblioteci externe — doar HTML/CSS/JS nativ.

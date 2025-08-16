@@ -5,21 +5,17 @@
   const btnMenu = document.getElementById('btnMenu');
   const btnDaily = document.getElementById('btnDaily');
   const btnConvert = document.getElementById('btnConvert');
-  const avatarToggle = document.getElementById('avatarToggle');
+  const btnAvatar = document.getElementById('btnAvatar');
   const gameButtons = document.querySelectorAll('[data-game]');
+
+  const shop = document.getElementById('shop');
+  const closet = document.getElementById('closet');
 
   let currentGame = null;
 
   function updateUIFromState(){
     const st = window.State.get();
-    // avatar buttons
-    [...avatarToggle.querySelectorAll('button')].forEach(b => {
-      const isActive = b.dataset.avatar === st.avatar;
-      b.classList.toggle('active', isActive);
-      b.setAttribute('aria-pressed', String(isActive));
-    });
-    // daily
-    btnDaily.disabled = !window.Daily.isAvailable(st.lastDailyReward);
+    btnDaily && (btnDaily.disabled = !window.Daily.isAvailable(st.lastDailyReward));
     window.UI.updateHeader(st);
   }
 
@@ -34,50 +30,37 @@
 
   function showMenu(){
     currentGame = null;
-    frame.src = '';
-    window.UI.toggleViews('menu');
+    if(frame){ frame.src = ''; frame.style.display = 'none'; }
+    if(menu){ menu.style.display = 'block'; }
+    if(shop) shop.style.display = 'none';
+    if(closet) closet.style.display = 'none';
     window.UI.showBreadcrumb(null);
   }
 
+  // expunem pentru handlerul din bus (exitToMenu)
+  window.showMenu = showMenu;
+
   // Evenimente UI
   gameButtons.forEach(btn => btn.addEventListener('click', () => loadGame(btn.dataset.game)));
-  btnMenu.addEventListener('click', showMenu);
+  btnMenu && btnMenu.addEventListener('click', showMenu);
 
-  avatarToggle.addEventListener('click', (e)=>{
-    const btn = e.target.closest('button');
-    if(!btn) return;
-    const avatar = btn.dataset.avatar === 'girl' ? 'girl' : 'boy';
-    window.State.setAvatar(avatar);
-    updateUIFromState();
-    // Anunțăm jocul curent (dacă e deschis)
-    if(frame.contentWindow){ window.Bus.sendToGame('avatarChanged', { avatar, equipped: {} }); }
-  });
+  // Avatar modal
+  btnAvatar && btnAvatar.addEventListener('click', ()=> window.AvatarModal?.open());
 
-  btnDaily.addEventListener('click', ()=>{
+  btnDaily && btnDaily.addEventListener('click', ()=>{
     const res = window.Daily.claim();
-    if(res.ok){
-      window.UI.showToast(`🎁 +${res.candies} bomboană(e) — recompensa zilnică`);
-      updateUIFromState();
-    } else {
-      window.UI.showToast(res.error || 'Nu disponibil.');
-    }
+    if(res.ok){ window.UI.showToast(`🎁 +${res.candies} bomboană(e) — recompensa zilnică`); updateUIFromState(); }
+    else { window.UI.showToast(res.error || 'Nu disponibil.'); }
   });
 
-  btnConvert.addEventListener('click', ()=>{
-    const rate = window.CONFIG.CONVERSION.POINTS_PER_CANDY;
-    const st = window.State.get();
-    const max = Math.floor(st.points / rate);
-    if(max <= 0){ window.UI.showToast('Nu ai suficiente puncte pentru conversie.'); return; }
+  btnConvert && btnConvert.addEventListener('click', ()=>{
+    const rate = window.CONFIG.CONVERSION.POINTS_PER_CANDY; const st = window.State.get();
+    const max = Math.floor(st.points / rate); if(max <= 0){ window.UI.showToast('Nu ai suficiente puncte pentru conversie.'); return; }
     const want = prompt(`Ai ${st.points} puncte. Rată: ${rate}p = 1 bomboană.\nCâte bomboane vrei să convertești? (max ${max})`);
-    const n = Math.floor(Number(want));
-    if(!Number.isFinite(n) || n <= 0) return;
+    const n = Math.floor(Number(want)); if(!Number.isFinite(n) || n <= 0) return;
     const res = window.State.convertPointsToCandies(n);
-    if(res.ok){
-      window.UI.showToast(`↔️ Conversie reușită: -${res.spent}p → +${res.converted}🍬`);
-      updateUIFromState();
-    } else {
-      window.UI.showToast(res.error || 'Conversie eșuată.');
-    }
+    if(res.ok){ window.UI.showToast(`↔️ Conversie reușită: -${res.spent}p → +${res.converted}🍬`); updateUIFromState(); }
+    else { window.UI.showToast(res.error || 'Conversie eșuată.'); }
   });
 
   // Init

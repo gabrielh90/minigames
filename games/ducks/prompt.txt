@@ -13,3 +13,7 @@
   <script src="./ducks.js"></script>
 </body>
 </html>
+
+1. am scos header si footer pt-ca sunt folosite cele globale
+2. jocul nu este centrat, imi apare bara de scrooll, deci ar trebui sa aiba dimensiunea iframe, parinte
+3. jocul are un timer si daca nu apas vreun buton imi apare mesajul ca am castigat:"felicitari" cu toate ca nu am jucat

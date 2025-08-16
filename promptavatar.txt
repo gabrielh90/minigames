@@ -1,0 +1,9 @@
+as vrea ca acest joc sa aiba cate un avatar pentru fiecare copil:
+ 1.as vrea sa mai apara un buton numit avatar langa butonul in care iti alegi daca esti fata sau baiat, cand apesi butonul sa iti deschida o fereastra cu un caracter de fata sau baiat depinzand de ce ai ales tu
+ 2.sub caracter as vrea sa fie 2 butoane 
+    magazin care te va duce intr o pagina unde poti cumpara cu buomboanele castigaete din jocuri haine pentru caracterul tau
+    dulap in care se afla toate hainele achizitionate deja 
+
+
+
+as vrea ca iconita de a alege intre baiat sau fata sa nu mai apara pe pagina princi[ala, ci in momentul in care dai click pe butonul avatar cand ti se deschide fereastra in partea de sus sa iti apara daca sa alegi intre fata sau baiat]
