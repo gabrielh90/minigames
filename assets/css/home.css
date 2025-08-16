@@ -1,0 +1,4 @@
+/* Stiluri specifice primei pagini */
+main { width: 100%; }
+#gameFrame { background: #0b1224; border-radius: var(--radius); box-shadow: var(--shadow); }
+.actions { display:flex; gap:10px; }

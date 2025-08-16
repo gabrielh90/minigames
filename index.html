@@ -1,62 +1,81 @@
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mini-Jocuri Edu</title>
-  <link rel="stylesheet" href="./assets/css/base.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini‑Jocuri Edu</title>
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/home.css" />
 </head>
 <body>
   <header>
     <div class="bar">
-      <div class="brand">Mini-<span>Jocuri</span> • Edu</div>
+      <div class="brand">Mini‑<span>Jocuri</span> • Edu</div>
       <div class="scoreboard">
-        <div class="pill" id="totalPoints">⭐ Puncte: 0</div>
-        <div class="pill" id="totalCandies">🍬 Bomboane: 0</div>
+        <div class="pill" id="totalPoints" aria-live="polite">⭐ Puncte: 0</div>
+        <div class="pill" id="totalCandies" aria-live="polite">🍬 Bomboane: 0</div>
         <div class="avatar-toggle" id="avatarToggle" title="Alege jucătorul">
-          <button data-avatar="boy" class="active">👦</button>
-          <button data-avatar="girl">👧</button>
+          <button data-avatar="boy" class="active" aria-pressed="true">👦</button>
+          <button data-avatar="girl" aria-pressed="false">👧</button>
         </div>
+      </div>
+    </div>
+    <div class="bar sub">
+      <nav class="breadcrumb" id="breadcrumb" aria-label="Breadcrumb">
+        <span>Meniu</span>
+      </nav>
+      <div class="actions">
+        <button class="btn" id="btnDaily">🎁 Recompensa zilnică</button>
+        <button class="btn secondary" id="btnConvert">↔️ Convertă puncte → bomboane</button>
       </div>
     </div>
   </header>
 
   <main>
-    <div id="menu" class="panel">
+    <div id="menu" class="panel" role="region" aria-label="Lista jocuri">
       <div class="menu-grid">
         <div class="card">
           <h3>Rățuște pe nuferi 🦆</h3>
           <p>Sari pe numărul corect afișat sus.</p>
-          <button onclick="loadGame('ducks')">Joacă</button>
+          <button class="btn" data-game="ducks">Joacă</button>
         </div>
         <div class="card">
           <h3>Adunări & Scăderi 🍬</h3>
           <p>Rezolvă corect și câștigă bomboane!</p>
-          <button onclick="loadGame('math')">Joacă</button>
+          <button class="btn" data-game="math">Joacă</button>
         </div>
         <div class="card">
           <h3>Balonul potrivit 🎈</h3>
           <p>Sparge balonul cu cifra țintă.</p>
-          <button onclick="loadGame('balloons')">Joacă</button>
+          <button class="btn" data-game="balloons">Joacă</button>
         </div>
         <div class="card">
           <h3>Vânătoarea de comori 💎</h3>
           <p>Găsește cutia cu numărul corect.</p>
-          <button onclick="loadGame('treasure')">Joacă</button>
+          <button class="btn" data-game="treasure">Joacă</button>
         </div>
       </div>
     </div>
 
-    <iframe id="gameFrame" style="width:100%;height:600px;border:none;display:none;"></iframe>
+    <iframe id="gameFrame" title="Zonă joc" style="width:100%;height:600px;border:none;display:none;"></iframe>
   </main>
 
   <footer>
     <div class="bar">
-      <span class="muted">© 2025 Mini-Jocuri Edu</span>
-      <button class="btn secondary" onclick="showMenu()">⟵ Meniu</button>
+      <span class="muted">© 2025 Mini‑Jocuri Edu</span>
+      <button class="btn secondary" id="btnMenu">⟵ Meniu</button>
     </div>
   </footer>
 
+  <!-- Toasts -->
+  <div id="toasts" class="toasts" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Scripturi: fără plugin‑uri, în ordine pentru dependențe -->
+  <script src="./assets/js/config.js"></script>
+  <script src="./assets/js/state.js"></script>
+  <script src="./assets/js/ui.js"></script>
+  <script src="./assets/js/daily.js"></script>
+  <script src="./assets/js/bus.js"></script>
   <script src="./assets/js/main.js"></script>
 </body>
 </html>

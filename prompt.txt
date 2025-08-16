@@ -1,134 +1,406 @@
+Vreau să GENERZI o pagină de start pentru o suită de jocuri pentru copii, în HTML/CSS/JS pur (fără plugin-uri, fără framework-uri, fără fonturi externe). Totul trebuie să funcționeze ca fișiere statice.
+
+# Obiectiv
+- O “pagină de start” care:
+  1) arată un **meniu cu jocuri** (carduri responsive),
+  2) afișează **scoreboard** global: ⭐ Puncte, 🍬 Bomboane,
+  3) are un **toggle de avatar** (👦/👧),
+  4) oferă **Recompensă zilnică** (gratuit) o dată pe zi,
+  5) permite **conversie** Puncte → Bomboane (rată fixă 100p = 1🍬),
+  6) încarcă jocurile într-un **iframe** și comunică bi-direcțional cu ele prin `postMessage`,
+  7) **păstrează progresul** în `localStorage`.
+
+# Constrângeri tehnice
+- Doar HTML, CSS și JS nativ. Fără biblioteci externe.
+- Structură statică de fișiere (fără build, fără Node).
+- UI în **limba română**.
+- Design modern/dark, cu paleta: 
+  - bg `#0f172a`, panel `#111827`, text `#f9fafb`, primary `#22c55e`, accent `#60a5fa`, muted `#9ca3af`.
+- Sistem-font (system-ui) – nu încărca fonturi din web.
+- Accesibilitate de bază: `aria-live="polite"` pe scoreboard, `title` pe iframe, `role="region"` pe lista de jocuri, focus vizibil.
+- **Aliniere butoane în carduri:** fiecare `.card` e coloană flex, iar butonul “Joacă” stă **aliniat jos** (folosește `.card > .btn { margin-top: auto; }`).
+- Fără componentă de plată. Bonusurile vin doar din jocuri și din recompensa zilnică.
+
+# Structura proiectului (exact așa)
+/
+├─ index.html
+├─ assets/
+│  ├─ css/
+│  │  ├─ base.css
+│  │  └─ home.css
+│  └─ js/
+│     ├─ config.js
+│     ├─ state.js
+│     ├─ ui.js
+│     ├─ daily.js
+│     ├─ bus.js
+│     └─ main.js
+└─ games/
+   ├─ ducks/index.html
+   ├─ math/index.html
+   ├─ balloons/index.html
+   └─ treasure/index.html
+
+> Pentru focusul pe “pagina de start”, jocurile pot fi doar pagini demo foarte scurte care trimit/recepționează mesaje conform protocolului de mai jos (doar pentru a testa integrarea).
+
+# Conținut & comportament
+
+## index.html
+- Header cu brand “Mini-Jocuri • Edu”.
+- Scoreboard (două “pill-uri”): ⭐ Puncte, 🍬 Bomboane (cu micro-animație “bump” la update).
+- Toggle avatar 👦/👧 (salvat în localStorage).
+- Sub-bar: breadcrumb (Meniu / Nume joc), butoane:
+  - “🎁 Recompensa zilnică”
+  - “↔️ Convertă puncte → bomboane”
+- Meniu jocuri (grid de carduri) cu 4 jocuri:
+  - Rățuște pe nuferi 🦆
+  - Adunări & Scăderi 🍬
+  - Balonul potrivit 🎈
+  - Vânătoarea de comori 💎
+- Fiecare card are titlu, descriere scurtă și buton **Joacă** aliniat la bază (vezi cerința de aliniere).
+- Iframe (ascuns inițial) pentru a încărca jocul selectat.
+- Footer cu © și buton “⟵ Meniu” care revine din joc la lista de jocuri.
+- Zonă de **toasts** pentru feedback simplu (JS nativ, fără lib).
+
+## CSS
+- `base.css`: variabile CSS (paleta), layout (grid body: header, sub-header, main, footer), componente (bar, pill, card, btn, toast), animații (`bump`, `slideIn`).
+- `home.css`: stiluri specifice paginii (breadcrumb, acțiuni, stil iframe).
+- Important: `.card { display:flex; flex-direction:column; }` + `.card > .btn { margin-top:auto; }` pentru alinierea butoanelor.
+
+## JS
+
+### config.js
+- Export global `window.CONFIG`:
+  - `CONVERSION.POINTS_PER_CANDY = 100`
+  - `DAILY_REWARD.candies = 3`
+  - `LIMITS = { POINTS_PER_MESSAGE: 100, CANDIES_PER_MESSAGE: 3, MESSAGES_PER_5S: 10 }`
+  - `GAMES = { ducks:'Rățuște pe nuferi', math:'Adunări & Scăderi', balloons:'Balonul potrivit', treasure:'Vânătoarea de comori' }`
+
+### state.js
+- Stocare în `localStorage` sub cheia `mje_state_v1`.
+- Structura statului:
+- API global `window.State`:
+- `get()`, `getPublic()`, `setAvatar(a)`,
+- `addPoints(n)`, `addCandies(n)`,
+- `convertPointsToCandies(count)` (validări + scădere puncte),
+- `convertAllPossible()` (opțional),
+- `setLastDailyReward(iso)`, `unlockBadge(id)`.
+
+### ui.js
+- `window.UI` cu:
+- `updateHeader(state)` (și animația bump),
+- `showToast(text)`,
+- `showBreadcrumb(gameName|null)`,
+- `toggleViews('menu'|'game')`.
+
+### daily.js
+- `window.Daily` cu:
+- `isAvailable(lastISO)`: disponibil o dată pe zi,
+- `claim()`: +`CONFIG.DAILY_REWARD.candies`, setează `lastDailyReward` la `yyyy-mm-dd`.
+
+### bus.js (protocol postMessage)
+- Acceptă DOAR mesaje de la `window.location.origin` și de la iframe-ul curent.
+- Anti-spam simplu: max `CONFIG.LIMITS.MESSAGES_PER_5S` per joc/5s.
+- Tipuri mesaje joc → pagină:
+- `addPoints { value:number>0, reason?:string }`
+- `addCandies { value:number>0, reason?:string }`
+- `requestPlayerState`
+- `gameOver { score?:number, canSafelyExit?:boolean }`
+- `achievementUnlocked { id:string }` (opțional)
+- Tipuri mesaje pagină → joc:
+- `playerState { points, candies, avatar, equipped, badges }`
+- `avatarChanged { avatar, equipped }`
+- La `addPoints`/`addCandies` aplică capurile per mesaj din `CONFIG.LIMITS` și actualizează UI (toast + scoreboard).
+
+### main.js (logica paginii)
+- Initializează UI din `State`.
+- Leagă butoanele din meniu (`[data-game]`) → setează breadcrumb, ascunde meniu, arată iframe, încarcă `./games/<id>/index.html?avatar=<>&game=<id>`.
+- Buton “⟵ Meniu” golește `src` la iframe, revine la meniu.
+- Toggle avatar schimbă `State.avatar` și trimite `avatarChanged` către jocul curent (dacă e deschis).
+- “🎁 Recompensa zilnică” → dacă disponibil, +candies, toast, update UI.
+- “↔️ Convertă puncte → bomboane” → prompt cu număr de bomboane dorit (max posibil), validări, conversie, toast, update UI.
+
+## Jocuri (doar pentru test)
+- Fiecare joc demo doar are 2–4 butoane care trimit mesaje:
+- `addPoints`, `addCandies`, `requestPlayerState`, `gameOver`.
+- Jocurile ascultă `playerState` și `avatarChanged`.
+
+# Cerințe de ieșire
+- Livrează **toate fișierele** exact pe structura de mai sus, cu cod complet (HTML/CSS/JS) și comentarii scurte unde e util.
+- Nu folosi biblioteci externe sau CDN-uri.
+- Asigură alinierea perfectă a butoanelor “Joacă” pe același rând în grid, indiferent de lungimea descrierii cardurilor.
+- UI să fie responsive și lizibil pe mobil și desktop.
+
+# Criterii de acceptare (MVP)
+- Refresh nu pierde punctele/bomboanele/avatarul (persistă).
+- “Recompensa zilnică” se poate lua o singură dată pe zi (se dezactivează după).
+- Conversia funcționează doar dacă există cel puțin 100p per 1🍬; mesaj de eroare când nu sunt suficiente puncte.
+- Jocul (iframe) poate obține `playerState` și poate adăuga puncte/bomboane.
+- Mesajele necunoscute/origin diferit sunt ignorate; rate-limit activ.
+
+Generează acum fișierele.
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="ro">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mini-Jocuri Edu</title>
-  <link rel="stylesheet" href="./assets/css/base.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rățuște pe nuferi 🦆</title>
+  <link rel="stylesheet" href="./ducks.css" />
 </head>
 <body>
   <header>
     <div class="bar">
-      <div class="brand">Mini-<span>Jocuri</span> • Edu</div>
+      <div class="brand">Rățuște <span>Edu</span></div>
       <div class="scoreboard">
         <div class="pill" id="totalPoints">⭐ Puncte: 0</div>
         <div class="pill" id="totalCandies">🍬 Bomboane: 0</div>
-        <div class="avatar-toggle" id="avatarToggle" title="Alege jucătorul">
-          <button data-avatar="boy" class="active">👦</button>
-          <button data-avatar="girl">👧</button>
-        </div>
       </div>
     </div>
   </header>
 
   <main>
-    <div id="menu" class="panel">
-      <div class="menu-grid">
-        <div class="card">
-          <h3>Rățuște pe nuferi 🦆</h3>
-          <p>Sari pe numărul corect afișat sus.</p>
-          <button onclick="loadGame('ducks')">Joacă</button>
-        </div>
-        <div class="card">
-          <h3>Adunări & Scăderi 🍬</h3>
-          <p>Rezolvă corect și câștigă bomboane!</p>
-          <button onclick="loadGame('math')">Joacă</button>
-        </div>
-        <div class="card">
-          <h3>Balonul potrivit 🎈</h3>
-          <p>Sparge balonul cu cifra țintă.</p>
-          <button onclick="loadGame('balloons')">Joacă</button>
-        </div>
-        <div class="card">
-          <h3>Vânătoarea de comori 💎</h3>
-          <p>Găsește cutia cu numărul corect.</p>
-          <button onclick="loadGame('treasure')">Joacă</button>
-        </div>
-      </div>
-    </div>
-
-    <iframe id="gameFrame" style="width:100%;height:600px;border:none;display:none;"></iframe>
+    <div id="screen" class="panel"></div>
   </main>
 
   <footer>
     <div class="bar">
-      <span class="muted">© 2025 Mini-Jocuri Edu</span>
-      <button class="btn secondary" onclick="showMenu()">⟵ Meniu</button>
+      <span class="muted">© 2025 Rățuște Edu</span>
     </div>
   </footer>
 
-  <script src="./assets/js/main.js"></script>
+  <script src="./ducks.js"></script>
 </body>
 </html>
-:root {
-  --bg: #0f172a; --panel: #111827; --text: #f9fafb;
-  --primary: #22c55e; --accent: #60a5fa; --muted: #9ca3af;
-  --shadow: 0 10px 25px rgba(0,0,0,.35); --radius: 16px;
+// Stare locală (în iframe)
+const App = {
+  points: 0,
+  candies: 0,
+  addPoints(n=1){ this.points += n; UI.updateHeader(); syncToParent('addPoints', n); },
+  addCandies(n=1){ this.candies += n; UI.updateHeader(); syncToParent('addCandies', n); }
+};
+
+function syncToParent(type, value){
+  // trimite scorul către pagina părinte (index.html cu iframe)
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type, value }, '*');
+  }
 }
+
+const UI = {
+  screen: document.getElementById('screen'),
+  updateHeader(){
+    document.getElementById('totalPoints').textContent = `⭐ Puncte: ${App.points}`;
+    document.getElementById('totalCandies').textContent = `🍬 Bomboane: ${App.candies}`;
+  },
+  clear(){ this.screen.innerHTML = ''; }
+};
+
+function rand(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
+function shuffle(arr){ return arr.sort(()=> Math.random()-0.5); }
+
+function Timer(seconds, onTick, onEnd){
+  let remain = seconds;
+  const id = setInterval(()=> {
+    remain--; onTick?.(remain);
+    if (remain <= 0){ clearInterval(id); onEnd?.(); }
+  }, 1000);
+  onTick?.(remain);
+  return { stop(){ clearInterval(id); } };
+}
+
+function startGame(){
+  UI.clear();
+  const container = document.createElement('div');
+  const initialTarget = rand(1,10);
+  container.innerHTML = `
+    <div class="toolbar centered">
+      <div class="target">Țintă: <strong id="duckTarget">${initialTarget}</strong></div>
+      <div class="pill-row">
+        <div class="pill" id="duckScore">✅ Corecte: 0 • 🍬 0</div>
+        <div class="pill" id="duckTime">⏳ 45</div>
+      </div>
+    </div>
+    <div class="game-area" id="pond"></div>
+  `;
+  UI.screen.appendChild(container);
+
+  const pond = document.getElementById('pond');
+
+  let correct = 0, candiesEarned = 0, currentTarget = initialTarget;
+  const pads = [];
+  let positions = [];
+  const cols = 5, rows = 2, padW = 110, padH = 110;
+
+  function computePositions(){
+    const rect = pond.getBoundingClientRect();
+    const gapX = (rect.width  - cols*padW) / (cols+1);
+    const gapY = (rect.height - rows*padH) / (rows+1);
+    const list = [];
+    for(let r=0; r<rows; r++){
+      for(let c=0; c<cols; c++){
+        const x = Math.round(gapX + c*(padW+gapX) + padW/2);
+        const y = Math.round(gapY + r*(padH+gapY) + padH/2);
+        list.push({x, y});
+      }
+    }
+    return list;
+  }
+
+  function placePads(){
+    positions = computePositions();
+    const numbers = Array.from({length:10}, (_,i)=> i+1);
+    numbers.forEach((n, i)=>{
+      const pos = positions[i];
+      const pad = document.createElement('div');
+      pad.className = 'lily-pad';
+      pad.textContent = n;
+      pad.dataset.number = n;
+      pad.style.left = (pos.x - padW/2) + 'px';
+      pad.style.top  = (pos.y - padH/2) + 'px';
+      pad.addEventListener('click', ()=>{
+        const chosen = Number(pad.dataset.number);
+        if(chosen === currentTarget){
+          correct++; candiesEarned++;
+          App.addPoints(1); App.addCandies(1);
+          newTarget();
+        } else {
+          alert("Ai pierdut!");
+        }
+        update();
+      });
+      pond.appendChild(pad);
+      pads.push(pad);
+    });
+  }
+
+  function newTarget(){
+    let t;
+    do { t = rand(1,10); } while(t===currentTarget);
+    currentTarget = t;
+    document.getElementById('duckTarget').textContent = t;
+  }
+
+  function update(){
+    document.getElementById('duckScore').textContent = `✅ Corecte: ${correct} • 🍬 ${candiesEarned}`;
+  }
+
+  placePads();
+
+  const tmr = Timer(45, (r)=> {
+    const el = document.getElementById('duckTime');
+    if (el) el.textContent = `⏳ ${r}`;
+  }, ()=> alert("Timpul a expirat!"));
+
+  // curățare la ieșire din pagină (de ex. schimbare joc)
+  window.addEventListener('beforeunload', ()=> tmr.stop());
+}
+
+document.addEventListener('DOMContentLoaded', startGame);
+  :root {
+  --bg: #0f172a; --panel: #111827; --soft: #1f2937;
+  --muted: #9ca3af; --text: #f9fafb; --primary: #22c55e;
+  --accent: #60a5fa; --shadow: 0 10px 25px rgba(0,0,0,.35);
+  --radius: 16px;
+}
+
 body {
-  margin:0; font-family: sans-serif; background: var(--bg); color: var(--text);
-  display: grid; grid-template-rows: auto 1fr auto; min-height: 100vh;
+  margin: 0;
+  background: radial-gradient(1000px 600px at 50% -10%, #1e293b, var(--bg));
+  color: var(--text);
+  font-family: system-ui, sans-serif;
+  min-height: 100vh;
 }
+
 header, footer { padding: 14px 20px; }
-.bar { max-width: 1100px; margin: auto; display: flex; justify-content: space-between; align-items: center; }
-.brand span { color: var(--primary); font-weight: bold; }
-.scoreboard { display: flex; gap: 12px; align-items: center; }
-.pill { background: rgba(255,255,255,.08); padding: 8px 12px; border-radius: 999px; }
-.btn { padding: 8px 14px; border-radius: 12px; border: none; cursor: pointer; background: var(--accent); }
-.btn.secondary { background: rgba(255,255,255,.1); color: var(--text); }
-.menu-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 16px; }
-.card { background: var(--panel); padding: 16px; border-radius: var(--radius); box-shadow: var(--shadow); }
-.panel { background: var(--panel); padding: 20px; border-radius: var(--radius); }
-let points = 0;
-let candies = 0;
-let avatar = 'boy';
-
-const totalPointsEl = document.getElementById('totalPoints');
-const totalCandiesEl = document.getElementById('totalCandies');
-const frame = document.getElementById('gameFrame');
-const menu = document.getElementById('menu');
-
-function updateHeader() {
-  totalPointsEl.textContent = `⭐ Puncte: ${points}`;
-  totalCandiesEl.textContent = `🍬 Bomboane: ${candies}`;
+header .bar, footer .bar {
+  max-width: 1100px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.brand { font-weight: 800; }
+.brand span { color: var(--primary); }
+.pill {
+  background: rgba(255,255,255,.08);
+  padding: 8px 12px;
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+}
+.panel {
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  margin: 20px auto;
+  max-width: 1100px;
 }
 
-function loadGame(name) {
-  menu.style.display = 'none';
-  frame.style.display = 'block';
-  frame.src = `./games/${name}/index.html?avatar=${avatar}`;
+/* toolbar */
+.toolbar.centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.target { font-size: 28px; font-weight: 900; color: var(--accent); }
+.target strong { font-size: 40px; color: var(--primary); }
+.pill-row { display: flex; gap: 10px; }
+
+/* aria joc */
+.game-area {
+  position: relative;
+  background: linear-gradient(180deg, #0b3a6d, #062e57);
+  border-radius: var(--radius);
+  min-height: 480px;
+  overflow: hidden;
 }
 
-function showMenu() {
-  frame.style.display = 'none';
-  menu.style.display = 'block';
-  frame.src = '';
+/* nuferi + rata */
+.lily-pad {
+  position: absolute;
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #30a46c, #18794e);
+  border: 3px solid #0e5b3a;
+  color: #eafff5;
+  font-weight: 900; font-size: 32px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 16px rgba(0,0,0,.35);
 }
 
-document.getElementById('avatarToggle').addEventListener('click', (e) => {
-  const btn = e.target.closest('button');
-  if (!btn) return;
-  avatar = btn.dataset.avatar;
-  document.querySelectorAll('#avatarToggle button').forEach(b => b.classList.toggle('active', b === btn));
-});
+.duck {
+  position: absolute;
+  font-size: 52px;
+  transform: translate(-50%, -70%);
+  transition: left .25s ease, top .25s ease, transform .25s ease;
+}
 
-// ascultă mesaje din iframe pentru scor
-window.addEventListener('message', (e) => {
-  if (e.data?.type === 'addPoints') { points += e.data.value; updateHeader(); }
-  if (e.data?.type === 'addCandies') { candies += e.data.value; updateHeader(); }
-});
+.splash {
+  position: absolute;
+  pointer-events: none;
+  width: 12px; height: 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.6);
+  animation: ripple .6s ease-out forwards;
+}
+@keyframes ripple { to { opacity: 0; transform: scale(6); } }
 
-updateHeader();
-
-aceasta este pegina de start pentru o suita de jocuri de copii
-1.aceasta mentine statistici legate de punctele adunate la fiecare joc 
-2.aceasta mentine statistici legate de bomboanele adunate:
- poti sa convertesti la 100 de puncte o bomoboana 
- unele jocuri pot da bomboane de bonusuri
- bomboanele pot fi cumparate
- bomboanele sunt folosite pentru costumizarea caracterului
-3.pe pagina de start este o lista cu jocuri
- jocurile se deschid intr un iframe
- comunica cu fiecare joc puntele si bomboanele adunate
-4.inca nu genera cod doar analizeaza l si sa mai extindem prompt ul legat de functionalitatile primei pagini
- ca de exemplu butonul de meniu are rolul sa te duca la pagina cu  lista de jocuri 
+acesta este un minijoc. as vrea sa aibe:
+  nuferii sa fie asezati in forma de cerc, iar ratusca sa fie pozitionata in mijlocul cerucului
+  o ratusca care sa sara pe alt nufar de fiecare daca cand se da un raspuns corect, iar ratusca sa fie afisata pe nufarul pe care sare 
+  cand se da un raspuns gresit ratusca sa cada cu tot cu nufar in gol si sa apara pe mijlocul ecranului 
+     ai pierdut
+     sa iti spuna cate puncte si bomboane ai castigat
+     sa fie un buton numit meniu care te duce la pagina de start
+     sa fie un butun numit reincearca care iti regenereaza jocul si il joci din nou 
+     

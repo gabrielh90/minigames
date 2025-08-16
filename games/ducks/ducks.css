@@ -5,6 +5,8 @@
   --radius: 16px;
 }
 
+* { box-sizing: border-box; }
+
 body {
   margin: 0;
   background: radial-gradient(1000px 600px at 50% -10%, #1e293b, var(--bg));
@@ -20,12 +22,14 @@ header .bar, footer .bar {
 }
 .brand { font-weight: 800; }
 .brand span { color: var(--primary); }
+
 .pill {
   background: rgba(255,255,255,.08);
   padding: 8px 12px;
   border-radius: 999px;
   box-shadow: var(--shadow);
 }
+
 .panel {
   background: rgba(255,255,255,.02);
   border: 1px solid rgba(255,255,255,.08);
@@ -52,11 +56,11 @@ header .bar, footer .bar {
   position: relative;
   background: linear-gradient(180deg, #0b3a6d, #062e57);
   border-radius: var(--radius);
-  min-height: 480px;
+  min-height: 520px;
   overflow: hidden;
 }
 
-/* nuferi + rata */
+/* nuferi */
 .lily-pad {
   position: absolute;
   width: 110px; height: 110px;
@@ -68,15 +72,28 @@ header .bar, footer .bar {
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   box-shadow: 0 8px 16px rgba(0,0,0,.35);
+  transition: transform .2s ease, box-shadow .2s ease, left .25s ease, top .25s ease;
+  user-select: none;
 }
+.lily-pad:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 12px 24px rgba(0,0,0,.4); }
+.lily-pad:active { transform: translateY(0) scale(0.98); }
 
+/* rata */
 .duck {
   position: absolute;
   font-size: 52px;
   transform: translate(-50%, -70%);
-  transition: left .25s ease, top .25s ease, transform .25s ease;
+  transition: left .25s ease, top .25s ease, transform .25s ease, opacity .25s ease;
+  z-index: 5;
+}
+.duck.jump { animation: duck-bounce .35s ease; }
+@keyframes duck-bounce {
+  0% { transform: translate(-50%, -80%) scale(1); }
+  50% { transform: translate(-50%, -95%) scale(1.05); }
+  100% { transform: translate(-50%, -70%) scale(1); }
 }
 
+/* efecte */
 .splash {
   position: absolute;
   pointer-events: none;
@@ -84,5 +101,73 @@ header .bar, footer .bar {
   border-radius: 999px;
   background: rgba(255,255,255,.6);
   animation: ripple .6s ease-out forwards;
+  z-index: 2;
 }
 @keyframes ripple { to { opacity: 0; transform: scale(6); } }
+
+/* cadere in gol */
+.lily-pad.fall,
+.duck.fall {
+  animation: fall-away .8s ease forwards;
+}
+@keyframes fall-away {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(600px) rotate(25deg); opacity: 0; }
+}
+
+/* overlay pierdere */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  display: grid;
+  place-items: center;
+  z-index: 10;
+}
+.modal {
+  background: var(--panel);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 22px;
+  min-width: 320px;
+  max-width: 420px;
+  text-align: center;
+}
+.modal-title {
+  font-size: 28px;
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+.modal-body {
+  color: var(--muted);
+  display: grid;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.btn {
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: 0 8px 16px rgba(0,0,0,.35); }
+.btn:active { transform: translateY(0); }
+.btn.primary { background: linear-gradient(180deg, #22c55e, #16a34a); border-color: #0f7a3a; }
+.btn.ghost { background: rgba(255,255,255,.04); }
+
+/* utilitare */
+.muted { color: var(--muted); }
+
+/* ... restul fișierului tău ... */
+
+.modal-title.success { color: var(--primary); }
